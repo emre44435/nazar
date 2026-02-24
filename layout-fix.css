@@ -1,0 +1,313 @@
+/* =========================================================
+   LAYOUT FIX v1 (SAFE)
+   - Sadece hizalama/boşluk/grid/okunurluk düzenler
+   - Mobil menü ve mevcut efektleri bozmaz
+========================================================= */
+
+/* ---- Layout tokens ---- */
+:root{
+  --lx-container: 1120px;
+  --lx-pad: 76px;
+  --lx-pad-m: 46px;
+
+  --lx-gap: 16px;
+  --lx-gap-lg: 20px;
+
+  --lx-radius: 18px;
+  --lx-radius-sm: 14px;
+
+  --lx-stroke: rgba(255,255,255,.12);
+  --lx-surface: linear-gradient(165deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+}
+
+/* ---- Global container discipline ---- */
+.container{
+  width: min(var(--lx-container), 92vw) !important;
+  margin-inline: auto !important;
+}
+
+/* ---- Section rhythm (aynı dikey boşluk) ---- */
+.hero,
+.nk-proof,
+.nk-home-services,
+.nk-advantages,
+.nk-about,
+.nk-contact,
+#yorumlar{
+  padding-top: var(--lx-pad) !important;
+  padding-bottom: var(--lx-pad) !important;
+}
+
+@media (max-width: 920px){
+  .hero,
+  .nk-proof,
+  .nk-home-services,
+  .nk-advantages,
+  .nk-about,
+  .nk-contact,
+  #yorumlar{
+    padding-top: var(--lx-pad-m) !important;
+    padding-bottom: var(--lx-pad-m) !important;
+  }
+}
+
+/* ---- Section heads (başlık alanı aynı hizada) ---- */
+.nk-head,
+.sectionHead{
+  max-width: 760px !important;
+  margin: 0 auto 26px !important;
+  text-align: center !important;
+}
+
+.nk-head p,
+.sectionHead .p{
+  max-width: 62ch !important;
+  margin: 10px auto 0 !important;
+}
+
+/* ---- Unified grids ---- */
+.nk-proof-grid,
+.nk-service-grid,
+.nk-adv-grid,
+#yorumlar .nk-rev-grid,
+.contactWrap,
+.miniCards{
+  gap: var(--lx-gap) !important;
+}
+
+@media (min-width: 921px){
+  .nk-service-grid,
+  .nk-adv-grid,
+  #yorumlar .nk-rev-grid,
+  .contactWrap{
+    gap: var(--lx-gap-lg) !important;
+  }
+}
+
+/* =========================================================
+   HERO: Sol metin + sağ görsel grid hizası
+========================================================= */
+@media (min-width: 921px){
+  .hero__inner{
+    align-items: start !important;
+    gap: 26px !important;
+  }
+
+  .hero__content{
+    padding-top: 6px !important;
+  }
+
+  .lead{
+    max-width: 58ch !important;
+  }
+}
+
+/* HERO mini cards (Renklendirme / Gelin Saçı) kesin hizalı */
+.hero .miniCards{
+  margin-top: 12px !important;
+  position: relative;
+  z-index: 5;
+}
+.hero .miniCards .card{
+  border-radius: var(--lx-radius) !important;
+  border: 1px solid var(--lx-stroke) !important;
+  background: var(--lx-surface) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.30) !important;
+  padding: 16px !important;
+  overflow: hidden !important;
+}
+.hero .miniCards .card h3{
+  margin: 0 0 6px !important;
+  line-height: 1.2 !important;
+}
+.hero .miniCards .card p{
+  margin: 0 !important;
+  line-height: 1.55 !important;
+  color: rgba(255,255,255,.78) !important;
+}
+
+/* =========================================================
+   PROOF: 4 kutu aynı boy, aynı hizalı
+========================================================= */
+.nk-proof-item{
+  border-radius: var(--lx-radius-sm) !important;
+  border: 1px solid var(--lx-stroke) !important;
+  background: rgba(255,255,255,.03) !important;
+}
+.nk-proof-item strong{ line-height: 1.1 !important; }
+.nk-proof-item span{ line-height: 1.35 !important; }
+
+/* =========================================================
+   HİZMETLER: Kartlar ve yazılar "asker gibi" aynı sırada
+========================================================= */
+#hizmetler .nk-service-grid{
+  align-items: stretch !important;
+}
+
+@media (min-width: 921px){
+  #hizmetler .nk-service-card{
+    height: 430px !important;
+    min-height: 430px !important;
+    border-radius: var(--lx-radius) !important;
+  }
+
+  #hizmetler .nk-service-card img{
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    transform: scale(1.06) !important; /* hafif zoom */
+  }
+
+  /* Overlay: başlık, açıklama, buton aynı satıra oturur */
+  #hizmetler .nk-service-overlay{
+    display: grid !important;
+    grid-template-rows: 2.6em 2.7em auto !important; /* 2 satır başlık, 2 satır açıklama */
+    gap: 8px !important;
+    align-content: end !important;
+    padding: 18px !important;
+  }
+
+  #hizmetler .nk-service-overlay h3{
+    margin: 0 !important;
+    line-height: 1.22 !important;
+    overflow: hidden !important;
+  }
+
+  #hizmetler .nk-service-overlay p{
+    margin: 0 !important;
+    line-height: 1.35 !important;
+    overflow: hidden !important;
+    max-width: 100% !important;
+  }
+
+  #hizmetler .nk-service-overlay .nk-btn{
+    justify-self: start !important;
+    align-self: end !important;
+    margin-top: 4px !important;
+  }
+}
+
+/* Mobilde doğal akış */
+@media (max-width: 920px){
+  #hizmetler .nk-service-card{
+    border-radius: var(--lx-radius) !important;
+  }
+}
+
+/* =========================================================
+   ADVANTAGES: Kartlar aynı ölçü, başlıklar hizalı
+========================================================= */
+.nk-adv-item{
+  border-radius: var(--lx-radius) !important;
+  border: 1px solid var(--lx-stroke) !important;
+}
+.nk-adv-item h3{
+  line-height: 1.25 !important;
+  margin-bottom: 8px !important;
+}
+
+/* =========================================================
+   ABOUT: Sol metin + sağ görsel aynı yükseklik hissi
+========================================================= */
+.nk-about-text,
+.nk-about-media{
+  border-radius: var(--lx-radius) !important;
+  border: 1px solid var(--lx-stroke) !important;
+}
+
+@media (min-width: 921px){
+  .nk-about-grid{
+    align-items: stretch !important;
+    gap: var(--lx-gap-lg) !important;
+  }
+  .nk-about-media{
+    min-height: 420px !important;
+  }
+}
+
+/* =========================================================
+   CONTACT: Panel ve harita hizası
+========================================================= */
+.contactPanel,
+.mapBox{
+  border-radius: var(--lx-radius) !important;
+  border: 1px solid var(--lx-stroke) !important;
+}
+
+@media (min-width: 921px){
+  .contactWrap{
+    align-items: stretch !important;
+  }
+  .mapBox{
+    min-height: 420px !important;
+  }
+  .mapBox iframe{
+    min-height: 420px !important;
+  }
+}
+
+/* =========================================================
+   REVIEWS: Kartlar aynı ölçü, metinler zıplamasın
+========================================================= */
+#yorumlar .nk-rev-card{
+  border-radius: var(--lx-radius) !important;
+  border: 1px solid var(--lx-stroke) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#yorumlar .nk-rev-card p{
+  margin-top: auto !important;
+}
+
+/* =========================================================
+   FOOTER: Ortada, dengeli
+========================================================= */
+.footer--minimal .footerMini{
+  width: min(var(--lx-container), 92vw) !important;
+  margin-inline: auto !important;
+}
+/* =========================================================
+   HERO MINI CARDS -> SAĞDAKİ SLIDER'IN ALTINA (DESKTOP)
+   - Renklendirme + Gelin Saçı kartlarını sağ kolona taşır
+   - Mobilde zaten tek kolon: doğal akış devam eder
+========================================================= */
+
+@media (min-width: 921px){
+  /* Hero iki kolonken: mini kartlar sağ kolona geçsin */
+  .hero__inner .miniCards{
+    grid-column: 2 / 3 !important;   /* sağ kolon */
+    grid-row: 2 !important;          /* slider'ın alt satırı */
+    width: 100% !important;
+    margin-top: 12px !important;
+
+    /* Premium ve temiz görünüm için: alt alta dizelim */
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 12px !important;
+  }
+
+  /* Kartların iç ritmi (başlık + metin) daha derli toplu */
+  .hero__inner .miniCards .card{
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .hero__inner .miniCards .card h3{
+    margin: 0 0 6px !important;
+    line-height: 1.18 !important;
+  }
+
+  .hero__inner .miniCards .card p{
+    margin: 0 !important;
+    line-height: 1.55 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Mobilde kartları yine temiz göster (istersen alt alta kalsın) */
+@media (max-width: 920px){
+  .miniCards{
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}

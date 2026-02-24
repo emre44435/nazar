@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nazarbayankuaforu.com/sitemap.xml
