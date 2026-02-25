@@ -20,6 +20,7 @@
   />
   <meta property="og:image" content="assets/img/isyeri.jpg" />
 
+  <!-- Font bağlantılarını hızlandır -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -27,12 +28,24 @@
     rel="stylesheet"
   />
 
+  <!-- LCP: Hero ana görselini önden yükle -->
+  <link rel="preload" as="image" href="assets/img/hero/hero-1.jpg" fetchpriority="high" />
+
+  <!-- Logo da hızlı gelsin -->
+  <link rel="preload" as="image" href="assets/img/logo-nazar.png" />
+
+  <!-- Mobilde donmayı azalt: Canvas efekti mobilde kapat (CSS daha yüklenmeden) -->
+  <style>
+    @media (max-width: 768px) {
+      #sparkCanvas { display: none !important; }
+    }
+  </style>
+
   <!-- Cache kırmak için sürüm -->
-<link rel="stylesheet" href="style.css?v=999">
-<script src="app.js?v=11" defer></script>
+  <link rel="preload" as="style" href="style.css?v=999" />
+  <link rel="stylesheet" href="style.css?v=999" />
 
-
-
+  <script src="app.js?v=11" defer></script>
 </head>
 
 <body>
@@ -48,14 +61,14 @@
       </div>
 
       <div class="topbar__right">
-     <a href="tel:+905424838035" aria-label="Telefon ile ara">📞 Hemen Ara</a>
+        <a href="tel:+905424838035" aria-label="Telefon ile ara">📞 Hemen Ara</a>
         <a href="#iletisim">📍 Konum</a>
         <a
-  href="https://wa.me/905424838035"
-  target="_blank"
-  rel="noopener noreferrer"
-  aria-label="WhatsApp üzerinden yaz"
->💬 WhatsApp</a>
+          href="https://wa.me/905424838035"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="WhatsApp üzerinden yaz"
+        >💬 WhatsApp</a>
       </div>
     </div>
   </div>
@@ -64,7 +77,14 @@
   <header class="nav" id="nav">
     <div class="container nav__inner">
       <a class="brand" href="#anasayfa" aria-label="Nazar Bayan Kuaförü ana sayfa">
-        <img src="assets/img/logo-nazar.png" alt="Nazar Kuaför logosu" class="brandLogo" />
+        <img
+          src="assets/img/logo-nazar.png"
+          alt="Nazar Kuaför logosu"
+          class="brandLogo"
+          width="180"
+          height="60"
+          decoding="async"
+        />
         <span class="brandText fx-gold-soft">Nazar Bayan Kuaförü</span>
       </a>
 
@@ -76,44 +96,43 @@
         <a href="#iletisim">Randevu</a>
       </nav>
 
-     <div class="nav__actions">
-  <a class="btn btn--ghost btn--call" href="tel:+905424838035" aria-label="Hemen Ara">
-    <span class="btn__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.8 19.8 0 0 1 3.1 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.63 2.62a2 2 0 0 1-.45 2.11L9.1 10.6a16 16 0 0 0 4.3 4.3l1.15-1.15a2 2 0 0 1 2.11-.45c.84.3 1.72.51 2.62.63A2 2 0 0 1 22 16.92z"
-              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </span>
-    <span>Hemen Ara</span>
-  </a>
+      <div class="nav__actions">
+        <a class="btn btn--ghost btn--call" href="tel:+905424838035" aria-label="Hemen Ara">
+          <span class="btn__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.8 19.8 0 0 1 3.1 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.63 2.62a2 2 0 0 1-.45 2.11L9.1 10.6a16 16 0 0 0 4.3 4.3l1.15-1.15a2 2 0 0 1 2.11-.45c.84.3 1.72.51 2.62.63A2 2 0 0 1 22 16.92z"
+                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>Hemen Ara</span>
+        </a>
 
-  <a class="btn btn--book" href="https://wa.me/905424838035" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp ile Randevu Al">
-    <span class="btn__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M21 11.5a8.5 8.5 0 1 1-3.05-6.53A8.45 8.45 0 0 1 21 11.5Z"
-              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8.8 20.2 3.8 21l.8-4.7"
-              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8.5 9.5h7M8.5 13h4.5"
-              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </span>
-    <span>Randevu Al</span>
-  </a>
+        <a class="btn btn--book" href="https://wa.me/905424838035" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp ile Randevu Al">
+          <span class="btn__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M21 11.5a8.5 8.5 0 1 1-3.05-6.53A8.45 8.45 0 0 1 21 11.5Z"
+                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8.8 20.2 3.8 21l.8-4.7"
+                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8.5 9.5h7M8.5 13h4.5"
+                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>Randevu Al</span>
+        </a>
 
-  <button
-    class="burger"
-    id="burger"
-    type="button"
-    aria-label="Menüyü aç/kapat"
-    aria-expanded="false"
-    aria-controls="menu"
-  >
-    <span></span><span></span><span></span>
-  </button>
-</div>
-
-
+        <button
+          class="burger"
+          id="burger"
+          type="button"
+          aria-label="Menüyü aç/kapat"
+          aria-expanded="false"
+          aria-controls="menu"
+        >
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
   </header>
 
   <main>
@@ -190,6 +209,8 @@
                 loading="eager"
                 fetchpriority="high"
                 decoding="async"
+                width="1200"
+                height="800"
               />
               <img
                 class="mediaSlide slide"
@@ -198,6 +219,8 @@
                 data-caption="Bakım Alanı"
                 loading="lazy"
                 decoding="async"
+                width="1200"
+                height="800"
               />
               <img
                 class="mediaSlide slide"
@@ -206,6 +229,8 @@
                 data-caption="Çalışma Bölümü"
                 loading="lazy"
                 decoding="async"
+                width="1200"
+                height="800"
               />
             </div>
 
@@ -221,77 +246,72 @@
             </div>
           </div>
         </div>
+      </div>
     </section>
 
     <!-- Güven göstergeleri -->
     <section class="nk-proof" aria-label="Güven göstergeleri">
-  <div class="container nk-proof-grid">
+      <div class="container nk-proof-grid">
+        <div class="nk-proof-item">
+          <div class="nk-proof-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 2.8l2.75 5.58 6.16.9-4.46 4.34 1.05 6.14L12 17.98 6.5 20.76l1.05-6.14L3.1 9.28l6.16-.9L12 2.8z"
+                stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="nk-proof-txt">
+            <strong>4.9 / 5</strong>
+            <span>Müşteri memnuniyeti</span>
+          </div>
+          <span class="nk-proof-glow" aria-hidden="true"></span>
+        </div>
 
-    <div class="nk-proof-item">
-      <div class="nk-proof-ico" aria-hidden="true">
-        <!-- Star -->
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M12 2.8l2.75 5.58 6.16.9-4.46 4.34 1.05 6.14L12 17.98 6.5 20.76l1.05-6.14L3.1 9.28l6.16-.9L12 2.8z"
-            stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="nk-proof-txt">
-        <strong>4.9 / 5</strong>
-        <span>Müşteri memnuniyeti</span>
-      </div>
-      <span class="nk-proof-glow" aria-hidden="true"></span>
-    </div>
+        <div class="nk-proof-item">
+          <div class="nk-proof-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M16 19c0-2.2-2-4-4-4s-4 1.8-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M12 12.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M19 19c0-1.6-1.1-3-2.6-3.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M17.2 5.9a3 3 0 0 1 0 5.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="nk-proof-txt">
+            <strong>1200+</strong>
+            <span>Mutlu danışan</span>
+          </div>
+          <span class="nk-proof-glow" aria-hidden="true"></span>
+        </div>
 
-    <div class="nk-proof-item">
-      <div class="nk-proof-ico" aria-hidden="true">
-        <!-- Users -->
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M16 19c0-2.2-2-4-4-4s-4 1.8-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M12 12.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z" stroke="currentColor" stroke-width="1.8"/>
-          <path d="M19 19c0-1.6-1.1-3-2.6-3.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M17.2 5.9a3 3 0 0 1 0 5.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="nk-proof-txt">
-        <strong>1200+</strong>
-        <span>Mutlu danışan</span>
-      </div>
-      <span class="nk-proof-glow" aria-hidden="true"></span>
-    </div>
+        <div class="nk-proof-item">
+          <div class="nk-proof-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 13.2c2.9 0 5.2-2.3 5.2-5.2S14.9 2.8 12 2.8 6.8 5.1 6.8 8s2.3 5.2 5.2 5.2z"
+                stroke="currentColor" stroke-width="1.8"/>
+              <path d="M9.6 12.6l-1 8.6 3.4-2 3.4 2-1-8.6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="nk-proof-txt">
+            <strong>15+ yıl</strong>
+            <span>Profesyonel salon tecrübesi</span>
+          </div>
+          <span class="nk-proof-glow" aria-hidden="true"></span>
+        </div>
 
-    <div class="nk-proof-item">
-      <div class="nk-proof-ico" aria-hidden="true">
-        <!-- Award -->
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M12 13.2c2.9 0 5.2-2.3 5.2-5.2S14.9 2.8 12 2.8 6.8 5.1 6.8 8s2.3 5.2 5.2 5.2z"
-            stroke="currentColor" stroke-width="1.8"/>
-          <path d="M9.6 12.6l-1 8.6 3.4-2 3.4 2-1-8.6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-        </svg>
+        <div class="nk-proof-item">
+          <div class="nk-proof-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M13 2.8L4.8 13.2h6.2l-0.8 8 8.9-10.4h-6.2l.1-8z"
+                stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="nk-proof-txt">
+            <strong>Aynı Gün</strong>
+            <span>Uygunlukta hızlı randevu</span>
+          </div>
+          <span class="nk-proof-glow" aria-hidden="true"></span>
+        </div>
       </div>
-      <div class="nk-proof-txt">
-        <strong>15+ yıl</strong>
-        <span>Profesyonel salon tecrübesi</span>
-      </div>
-      <span class="nk-proof-glow" aria-hidden="true"></span>
-    </div>
-
-    <div class="nk-proof-item">
-      <div class="nk-proof-ico" aria-hidden="true">
-        <!-- Bolt / Fast -->
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M13 2.8L4.8 13.2h6.2l-0.8 8 8.9-10.4h-6.2l.1-8z"
-            stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="nk-proof-txt">
-        <strong>Aynı Gün</strong>
-        <span>Uygunlukta hızlı randevu</span>
-      </div>
-      <span class="nk-proof-glow" aria-hidden="true"></span>
-    </div>
-
-  </div>
-</section>
+    </section>
 
     <!-- Hizmetler -->
     <section class="nk-home-services" id="hizmetler" aria-label="Hizmetlerimiz">
@@ -307,12 +327,14 @@
         <div class="nk-service-grid">
           <article class="nk-service-card">
             <img
-  class="srv-img srv-img--kesim"
-  src="assets/img/hero/kesim.jpg"
-  alt="Modern kadın saç kesim örneği"
-  loading="lazy"
-  decoding="async"
-/>
+              class="srv-img srv-img--kesim"
+              src="assets/img/hero/kesim.jpg"
+              alt="Modern kadın saç kesim örneği"
+              loading="lazy"
+              decoding="async"
+              width="1200"
+              height="800"
+            />
             <div class="nk-service-overlay">
               <h3>Modern Saç Kesimi</h3>
               <p>Yüz hatlarına uygun, hafif katlı ve formunu uzun süre koruyan kesimler.</p>
@@ -322,12 +344,14 @@
 
           <article class="nk-service-card">
             <img
-  class="srv-img srv-img--boya"
-  src="assets/img/hero/renk.jpg"
-  alt="Saç renklendirme uygulama örneği"
-  loading="lazy"
-  decoding="async"
-/>
+              class="srv-img srv-img--boya"
+              src="assets/img/hero/renk.jpg"
+              alt="Saç renklendirme uygulama örneği"
+              loading="lazy"
+              decoding="async"
+              width="1200"
+              height="800"
+            />
             <div class="nk-service-overlay">
               <h3>Renklendirme &amp; Işıltı</h3>
               <p>Doğal geçişli tonlar, parlak görünüm ve profesyonel koruyucu bakım.</p>
@@ -337,12 +361,14 @@
 
           <article class="nk-service-card">
             <img
-  class="srv-img srv-img--gelin"
-  src="assets/img/hero/gelin.jpg"
-  alt="Gelin saçı ve makyaj örneği"
-  loading="lazy"
-  decoding="async"
-/>
+              class="srv-img srv-img--gelin"
+              src="assets/img/hero/gelin.jpg"
+              alt="Gelin saçı ve makyaj örneği"
+              loading="lazy"
+              decoding="async"
+              width="1200"
+              height="800"
+            />
             <div class="nk-service-overlay">
               <h3>Gelin Saçı &amp; Makyaj</h3>
               <p>Özel gününüzde kalıcı, fotojenik ve size özel bütünsel görünüm.</p>
@@ -400,7 +426,14 @@
         </div>
 
         <div class="nk-about-media">
-          <img src="assets/img/isyeri.jpg" alt="Nazar Bayan Kuaförü dış görünüm" loading="lazy" decoding="async" />
+          <img
+            src="assets/img/isyeri.jpg"
+            alt="Nazar Bayan Kuaförü dış görünüm"
+            loading="lazy"
+            decoding="async"
+            width="1200"
+            height="800"
+          />
         </div>
       </div>
     </section>
@@ -536,7 +569,15 @@
   <footer class="footer footer--minimal">
     <div class="container footerMini">
       <a href="#anasayfa" class="footer__brand" aria-label="Nazar Bayan Kuaförü ana sayfa">
-        <img src="assets/img/logo-nazar.png" alt="Nazar Bayan Kuaförü logosu" class="footer__logo" />
+        <img
+          src="assets/img/logo-nazar.png"
+          alt="Nazar Bayan Kuaförü logosu"
+          class="footer__logo"
+          width="180"
+          height="60"
+          loading="lazy"
+          decoding="async"
+        />
         <span>Nazar Bayan Kuaförü</span>
       </a>
 
@@ -584,79 +625,75 @@
     ]
   }
   </script>
+
   <!-- Floating Social Button -->
-<div class="nk-fab" data-fab data-open="false" aria-label="Sosyal hızlı erişim">
-  <div class="nk-fab__panel" id="nkFabPanel" aria-hidden="true">
-    <a
-      class="nk-fab__item nk-fab__item--wa"
-      href="https://wa.me/905424838035"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="WhatsApp ile yaz"
-      data-fab-item
-    >
-      <span class="nk-fab__ico" aria-hidden="true">
-        <!-- WhatsApp icon -->
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M12 21a9 9 0 0 0 7.63-13.8A9 9 0 0 0 3.95 18.6L3 21l2.48-.9A8.96 8.96 0 0 0 12 21Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-          <path d="M8.5 7.9c.3-.7.6-.7.9-.7h.7c.2 0 .5 0 .6.4l.8 2c.1.3.1.6-.1.8l-.6.7c-.2.2-.2.5 0 .8.6 1 1.5 1.9 2.5 2.5.3.2.6.2.8 0l.7-.6c.2-.2.5-.2.8-.1l2 .8c.4.1.4.4.4.6v.7c0 .3 0 .6-.7.9-.7.3-2 .5-3.8-.1-1.8-.6-3.6-2.2-4.8-3.9-1.2-1.7-1.5-3-.1-3.8Z"
-            stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-        </svg>
-      </span>
-      <span class="nk-fab__label">WhatsApp</span>
-    </a>
+  <div class="nk-fab" data-fab data-open="false" aria-label="Sosyal hızlı erişim">
+    <div class="nk-fab__panel" id="nkFabPanel" aria-hidden="true">
+      <a
+        class="nk-fab__item nk-fab__item--wa"
+        href="https://wa.me/905424838035"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="WhatsApp ile yaz"
+        data-fab-item
+      >
+        <span class="nk-fab__ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 21a9 9 0 0 0 7.63-13.8A9 9 0 0 0 3.95 18.6L3 21l2.48-.9A8.96 8.96 0 0 0 12 21Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M8.5 7.9c.3-.7.6-.7.9-.7h.7c.2 0 .5 0 .6.4l.8 2c.1.3.1.6-.1.8l-.6.7c-.2.2-.2.5 0 .8.6 1 1.5 1.9 2.5 2.5.3.2.6.2.8 0l.7-.6c.2-.2.5-.2.8-.1l2 .8c.4.1.4.4.4.6v.7c0 .3 0 .6-.7.9-.7.3-2 .5-3.8-.1-1.8-.6-3.6-2.2-4.8-3.9-1.2-1.7-1.5-3-.1-3.8Z"
+              stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="nk-fab__label">WhatsApp</span>
+      </a>
 
-    <a
-      class="nk-fab__item nk-fab__item--ig"
-      href="https://instagram.com/nazarkuafor__"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Instagram'a git"
-      data-fab-item
+      <a
+        class="nk-fab__item nk-fab__item--ig"
+        href="https://instagram.com/nazarkuafor__"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Instagram'a git"
+        data-fab-item
+      >
+        <span class="nk-fab__ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M7.2 2.9h9.6c2.4 0 4.3 1.9 4.3 4.3v9.6c0 2.4-1.9 4.3-4.3 4.3H7.2c-2.4 0-4.3-1.9-4.3-4.3V7.2c0-2.4 1.9-4.3 4.3-4.3Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 16.4a4.4 4.4 0 1 0 0-8.8 4.4 4.4 0 0 0 0 8.8Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M17.7 6.6h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="nk-fab__label">Instagram</span>
+      </a>
+    </div>
+
+    <button
+      class="nk-fab__btn nk-fab__btn--social"
+      type="button"
+      id="nkFabBtn"
+      aria-controls="nkFabPanel"
+      aria-expanded="false"
+      aria-label="WhatsApp ve Instagram seçeneklerini aç/kapat"
     >
-      <span class="nk-fab__ico" aria-hidden="true">
-        <!-- Instagram icon -->
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M7.2 2.9h9.6c2.4 0 4.3 1.9 4.3 4.3v9.6c0 2.4-1.9 4.3-4.3 4.3H7.2c-2.4 0-4.3-1.9-4.3-4.3V7.2c0-2.4 1.9-4.3 4.3-4.3Z" stroke="currentColor" stroke-width="1.8"/>
-          <path d="M12 16.4a4.4 4.4 0 1 0 0-8.8 4.4 4.4 0 0 0 0 8.8Z" stroke="currentColor" stroke-width="1.8"/>
-          <path d="M17.7 6.6h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-        </svg>
+      <span class="nk-fab__social" aria-hidden="true">
+        <span class="nk-fab__mini nk-fab__mini--wa" title="WhatsApp">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 21a9 9 0 0 0 7.63-13.8A9 9 0 0 0 3.95 18.6L3 21l2.48-.9A8.96 8.96 0 0 0 12 21Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M8.5 7.9c.3-.7.6-.7.9-.7h.7c.2 0 .5 0 .6.4l.8 2c.1.3.1.6-.1.8l-.6.7c-.2.2-.2.5 0 .8.6 1 1.5 1.9 2.5 2.5.3.2.6.2.8 0l.7-.6c.2-.2.5-.2.8-.1l2 .8c.4.1.4.4.4.6v.7c0 .3 0 .6-.7.9-.7.3-2 .5-3.8-.1-1.8-.6-3.6-2.2-4.8-3.9-1.2-1.7-1.5-3-.1-3.8Z"
+              stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </span>
+
+        <span class="nk-fab__mini nk-fab__mini--ig" title="Instagram">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M7.2 2.9h9.6c2.4 0 4.3 1.9 4.3 4.3v9.6c0 2.4-1.9 4.3-4.3 4.3H7.2c-2.4 0-4.3-1.9-4.3-4.3V7.2c0-2.4 1.9-4.3 4.3-4.3Z" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M12 16.4a4.4 4.4 0 1 0 0-8.8 4.4 4.4 0 0 0 0 8.8Z" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M17.7 6.6h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </span>
       </span>
-      <span class="nk-fab__label">Instagram</span>
-    </a>
+
+      <span class="nk-fab__txt" aria-hidden="true">Sosyal</span>
+    </button>
   </div>
-
-  <button
-  class="nk-fab__btn nk-fab__btn--social"
-  type="button"
-  id="nkFabBtn"
-  aria-controls="nkFabPanel"
-  aria-expanded="false"
-  aria-label="WhatsApp ve Instagram seçeneklerini aç/kapat"
->
-  <span class="nk-fab__social" aria-hidden="true">
-    <span class="nk-fab__mini nk-fab__mini--wa" title="WhatsApp">
-      <!-- WhatsApp mini icon -->
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M12 21a9 9 0 0 0 7.63-13.8A9 9 0 0 0 3.95 18.6L3 21l2.48-.9A8.96 8.96 0 0 0 12 21Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-        <path d="M8.5 7.9c.3-.7.6-.7.9-.7h.7c.2 0 .5 0 .6.4l.8 2c.1.3.1.6-.1.8l-.6.7c-.2.2-.2.5 0 .8.6 1 1.5 1.9 2.5 2.5.3.2.6.2.8 0l.7-.6c.2-.2.5-.2.8-.1l2 .8c.4.1.4.4.4.6v.7c0 .3 0 .6-.7.9-.7.3-2 .5-3.8-.1-1.8-.6-3.6-2.2-4.8-3.9-1.2-1.7-1.5-3-.1-3.8Z"
-          stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-      </svg>
-    </span>
-
-    <span class="nk-fab__mini nk-fab__mini--ig" title="Instagram">
-      <!-- Instagram mini icon -->
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M7.2 2.9h9.6c2.4 0 4.3 1.9 4.3 4.3v9.6c0 2.4-1.9 4.3-4.3 4.3H7.2c-2.4 0-4.3-1.9-4.3-4.3V7.2c0-2.4 1.9-4.3 4.3-4.3Z" stroke="currentColor" stroke-width="1.7"/>
-        <path d="M12 16.4a4.4 4.4 0 1 0 0-8.8 4.4 4.4 0 0 0 0 8.8Z" stroke="currentColor" stroke-width="1.7"/>
-        <path d="M17.7 6.6h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-      </svg>
-    </span>
-  </span>
-
-  <span class="nk-fab__txt" aria-hidden="true">Sosyal</span>
-</button>
-
-</div>
 </body>
 </html>

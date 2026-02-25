@@ -2471,3 +2471,87 @@ body.mobile-fix-open .nk-fab{
     grid-column: 1 / -1 !important;
   }
 }
+/* =========================================================
+   FINAL MOBILE PERFORMANCE LOCK (SAFE + NO LOOK BREAK)
+   - Mobilde donma/LCP için en pahalı efektleri yumuşatır
+   - Desktop görünüm aynı kalır
+========================================================= */
+
+@media (max-width: 920px){
+
+  /* A) Arka plan animasyonunu mobilde durdur (en büyük kazanç) */
+  body::after{
+    animation: none !important;
+    will-change: auto !important;
+  }
+
+  /* B) Mobilde lattice (çizgi/doku) biraz daha hafif: moire + GPU yükü azalır */
+  body::before{
+    opacity: .36 !important;
+  }
+
+  /* C) Backdrop blur mobilde gerçekten pahalı: kapat */
+  .nav,
+  .topbar,
+  .mediaOverlay,
+  .mediaNav,
+  .mediaBadge,
+  .nk-fab__item,
+  .nk-fab__btn--social{
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* D) Çok ağır gölgeleri biraz yumuşat (premium kalır, cihaz rahatlar) */
+  .mediaCard--pro,
+  .nk-service-card,
+  .nk-adv-item,
+  #yorumlar .nk-rev-card,
+  .nk-about-text,
+  .nk-about-media,
+  .contactPanel,
+  .mapBox,
+  .btn,
+  .nk-proof-item{
+    box-shadow: 0 10px 22px rgba(0,0,0,.28) !important;
+  }
+
+  /* E) Hero slider: uzun transform animasyonu mobilde gereksiz yük */
+  .mediaSlide{
+    transition: opacity .45s ease !important;
+    transform: none !important;
+    will-change: opacity !important;
+  }
+  .mediaSlide.is-active,
+  .mediaSlide.active,
+  .mediaSlide[aria-hidden="false"]{
+    transform: none !important;
+  }
+
+  /* F) Başlık shine animasyonu CPU yer: mobilde tamamen kapat (görünüm aynı, sadece parıltı hareketi yok) */
+  .shineLine::after,
+  .whiteBase::after{
+    animation: none !important;
+  }
+
+  /* G) Aşağı bölümleri ekran gelene kadar render etme (çok etkili) */
+  .nk-proof,
+  .nk-home-services,
+  .nk-advantages,
+  .nk-about,
+  .nk-contact,
+  #yorumlar,
+  .footer{
+    content-visibility: auto;
+    contain-intrinsic-size: 900px;
+  }
+
+  /* H) Mobile drawer: sen #menu'yu zaten gizliyorsun.
+        O yüzden #menu ile ilgili "menu-open" patchlerini etkisizleştiriyoruz. */
+  body.menu-open::before{
+    content: none !important;
+  }
+  #menu{
+    display: none !important;
+  }
+}
