@@ -1,14 +1,17 @@
 "use strict";
 
 (() => {
-  if (window.__NAZAR_APP_V6__) return;
-  window.__NAZAR_APP_V6__ = true;
+  if (window.__NAZAR_APP_V7__) return;
+  window.__NAZAR_APP_V7__ = true;
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   // Perf helpers
-  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const mm768 = window.matchMedia("(max-width: 768px)");
+  const mm920 = window.matchMedia("(max-width: 920px)");
+  const isMobile768 = () => mm768.matches;
+  const isMobile920 = () => mm920.matches;
 
   const throttle = (fn, wait = 120) => {
     let last = 0;
@@ -44,13 +47,26 @@
 
   const restartAnimClass = (el, cls) => {
     if (!el) return;
-    // Desktop'ta reflow ile garanti restart, mobilde reflow yok
     el.classList.remove(cls);
-    if (isMobile) {
+    if (isMobile768()) {
       requestAnimationFrame(() => el.classList.add(cls));
     } else {
-      void el.offsetWidth; // reflow
+      void el.offsetWidth;
       el.classList.add(cls);
+    }
+  };
+
+  /* =========================================================
+     0) Canvas Safety Guard (mobilde asla çalışma)
+     - Şu an canvas çizim kodun yok, ama ileride eklersen de mobilde güvenli olur.
+  ========================================================= */
+  const initCanvasGuard = () => {
+    const canvas = $("#sparkCanvas");
+    if (!canvas) return;
+
+    if (isMobile768()) {
+      canvas.style.display = "none";
+      // Eğer bir yerde canvas için interval/raf eklenirse ileride buradan kapatabilirsin.
     }
   };
 
@@ -66,7 +82,6 @@
      2) Mobile Menu (tek, stabil + mobil performans fix)
   ========================================================= */
   const initMobileMenu = () => {
-    // Tek sefer kur
     if (window.__MOBILE_MENU_HARD_FIX__) return;
     window.__MOBILE_MENU_HARD_FIX__ = true;
 
@@ -95,7 +110,6 @@
 
     clearBodyLocks();
 
-    // Backdrop
     let backdrop = $("#mobileFixBackdrop");
     if (!backdrop) {
       backdrop = document.createElement("div");
@@ -103,7 +117,6 @@
       document.body.appendChild(backdrop);
     }
 
-    // Drawer
     let drawer = $("#mobileFixDrawer");
     if (!drawer) {
       drawer = document.createElement("aside");
@@ -133,12 +146,10 @@
     ];
 
     const styleBase = () => {
-      // Backdrop
       setImp(backdrop, "position", "fixed");
       setImp(backdrop, "inset", "0");
       setImp(backdrop, "background", "rgba(0,0,0,.38)");
 
-      // Mobil performans: blur pahalı, mobilde kapat
       if (window.innerWidth <= MOBILE_MAX) {
         setImp(backdrop, "backdrop-filter", "none");
         setImp(backdrop, "-webkit-backdrop-filter", "none");
@@ -153,7 +164,6 @@
       setImp(backdrop, "display", "none");
       setImp(backdrop, "transition", "opacity .22s ease");
 
-      // Drawer
       setImp(drawer, "position", "fixed");
       setImp(drawer, "top", "0");
       setImp(drawer, "right", "0");
@@ -217,7 +227,6 @@
         if (it.target) a.target = it.target;
         if (it.rel) a.rel = it.rel;
 
-        // Kart görünümü
         a.style.display = "flex";
         a.style.alignItems = "center";
         a.style.justifyContent = "space-between";
@@ -299,7 +308,6 @@
       drawer.setAttribute("aria-hidden", "true");
     };
 
-    // İlk kurulum
     styleBase();
     syncBaseMenuVisibility();
     buildLinks();
@@ -327,10 +335,8 @@
       if (e.key === "Escape") closeMenu();
     });
 
-    // Resize: throttle
     const onResize = throttle(() => {
       syncBaseMenuVisibility();
-      // mobilde blur ayarı tekrar güncellensin
       styleBase();
       if (window.innerWidth > MOBILE_MAX) closeMenu(true);
     }, 140);
@@ -411,7 +417,7 @@
   };
 
   /* =========================================================
-     4) Hero Slider (stabil + mobil performans fix)
+     4) Hero Slider (stabil + ekranda değilse durur)
   ========================================================= */
   const initHeroSlider = () => {
     const root = $("#heroGallery");
@@ -439,15 +445,13 @@
       overlay.appendChild(dotsWrap);
     }
 
-    // Mobilde biraz daha yavaş değişsin (CPU rahatlar)
-    const AUTO_MS = isMobile ? 6500 : 5200;
+    const reduceMotionQ = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const animOn = () => !reduceMotionQ.matches;
+
+    // Mobilde daha hafif
+    const AUTO_MS = isMobile920() ? 7000 : 5200;
     const LOCK_MS = 620;
     const SWIPE_MIN = 45;
-
-    const FORCE_ANIMATION = true; // PC'de reduce-motion açık olsa bile efekt zorla çalışsın
-    const reduceMotionQ = window.matchMedia("(prefers-reduced-motion: reduce)");
-    // Mobilde animasyonlar açık kalsa da "sweep reflow" kapalı olacak
-    const animOn = () => FORCE_ANIMATION || !reduceMotionQ.matches;
 
     let index = slides.findIndex(
       (s) =>
@@ -463,6 +467,7 @@
     let pausedElapsed = 0;
     let startedAt = 0;
     let locked = false;
+    let inView = true; // IntersectionObserver ile güncellenecek
     const touch = { x: 0, y: 0 };
 
     const setImp = (el, prop, val) => {
@@ -503,25 +508,31 @@
       setImp(slide, "object-position", "center center");
       setImp(slide, "backface-visibility", "hidden");
       setImp(slide, "will-change", "opacity, transform, filter");
-      setImp(
-        slide,
-        "transition",
-        "opacity .85s cubic-bezier(.22,.61,.36,1), transform 1.15s cubic-bezier(.22,.61,.36,1), filter .9s ease"
-      );
+
+      // Mobilde geçiş daha hafif
+      if (isMobile920()) {
+        setImp(slide, "transition", "opacity .55s ease, transform 1.6s ease, filter .6s ease");
+      } else {
+        setImp(
+          slide,
+          "transition",
+          "opacity .85s cubic-bezier(.22,.61,.36,1), transform 1.15s cubic-bezier(.22,.61,.36,1), filter .9s ease"
+        );
+      }
     };
 
     const setSlideActive = (slide, active) => {
       if (active) {
         setImp(slide, "opacity", "1");
         setImp(slide, "transform", "translateZ(0) scale(1)");
-        setImp(slide, "filter", "saturate(1.07) contrast(1.05)");
+        setImp(slide, "filter", isMobile920() ? "saturate(1.04) contrast(1.03)" : "saturate(1.07) contrast(1.05)");
         setImp(slide, "z-index", "2");
         slide.classList.add("is-active", "active");
         slide.setAttribute("aria-hidden", "false");
       } else {
         setImp(slide, "opacity", "0");
-        setImp(slide, "transform", "translateZ(0) scale(1.045)");
-        setImp(slide, "filter", "saturate(1.02) contrast(1.01)");
+        setImp(slide, "transform", "translateZ(0) scale(1.03)");
+        setImp(slide, "filter", "saturate(1.01) contrast(1.01)");
         setImp(slide, "z-index", "1");
         slide.classList.remove("is-active", "active");
         slide.setAttribute("aria-hidden", "true");
@@ -534,14 +545,13 @@
     });
 
     const pulseSweep = () => {
-      // Mobilde reflow pahalı: sweep animasyonunu kapat
-      if (isMobile) return;
+      // Mobilde sweep yok
+      if (isMobile920()) return;
       viewport.classList.remove("is-sweeping");
-      void viewport.offsetWidth; // reflow
+      void viewport.offsetWidth;
       viewport.classList.add("is-sweeping");
     };
 
-    // Preload cache (aynı src tekrar tekrar yüklenmesin)
     const preloadCache = new Set();
     const preloadSrc = (src) => {
       if (!src || preloadCache.has(src)) return;
@@ -585,14 +595,14 @@
     };
 
     const animateProgress = (baseElapsed = 0) => {
-      if (!animOn() || paused) {
+      if (!animOn() || paused || !inView) {
         setProgress(1);
         return;
       }
       startedAt = performance.now();
 
       const tick = (ts) => {
-        if (paused) return;
+        if (paused || !inView) return;
         const elapsed = baseElapsed + (ts - startedAt);
         setProgress(elapsed / AUTO_MS);
         if (elapsed < AUTO_MS) raf = requestAnimationFrame(tick);
@@ -603,7 +613,7 @@
 
     const scheduleNext = (delayMs, baseElapsed = 0) => {
       clearLoops();
-      if (!animOn() || paused) {
+      if (!animOn() || paused || !inView) {
         setProgress(1);
         return;
       }
@@ -624,7 +634,7 @@
       paused = false;
       root.classList.remove("is-paused");
 
-      if (!animOn()) {
+      if (!animOn() || !inView) {
         setProgress(1);
         return;
       }
@@ -639,7 +649,7 @@
       const target = (newIndex + slides.length) % slides.length;
 
       if (target === index) {
-        if (!paused) scheduleNext(AUTO_MS, 0);
+        if (!paused && inView) scheduleNext(AUTO_MS, 0);
         return;
       }
 
@@ -657,7 +667,7 @@
 
       if (animOn()) pulseSweep();
 
-      if (!paused) {
+      if (!paused && inView) {
         setProgress(0);
         scheduleNext(AUTO_MS, 0);
       }
@@ -684,8 +694,11 @@
     prevBtn?.addEventListener("click", prev);
     nextBtn?.addEventListener("click", next);
 
-    root.addEventListener("mouseenter", pauseAuto);
-    root.addEventListener("mouseleave", resumeAuto);
+    // Mobilde hover event gereksiz
+    if (!isMobile920()) {
+      root.addEventListener("mouseenter", pauseAuto);
+      root.addEventListener("mouseleave", resumeAuto);
+    }
     root.addEventListener("focusin", pauseAuto);
     root.addEventListener("focusout", (e) => {
       const related = e.relatedTarget;
@@ -739,13 +752,35 @@
       else resumeAuto();
     });
 
+    // Ekranda değilse tamamen durdur (BÜYÜK perf farkı)
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          inView = !!entry && entry.isIntersecting;
+
+          if (!inView) {
+            clearLoops();
+            setProgress(1);
+          } else {
+            if (!paused && animOn()) {
+              setProgress(0);
+              scheduleNext(AUTO_MS, 0);
+            }
+          }
+        },
+        { threshold: 0.15 }
+      );
+      io.observe(root);
+    }
+
     if (typeof reduceMotionQ.addEventListener === "function") {
       reduceMotionQ.addEventListener("change", () => {
-        if (!paused) scheduleNext(AUTO_MS, 0);
+        if (!paused && inView) scheduleNext(AUTO_MS, 0);
       });
     } else if (typeof reduceMotionQ.addListener === "function") {
       reduceMotionQ.addListener(() => {
-        if (!paused) scheduleNext(AUTO_MS, 0);
+        if (!paused && inView) scheduleNext(AUTO_MS, 0);
       });
     }
 
@@ -796,6 +831,7 @@
   };
 
   // Init
+  initCanvasGuard();
   initFooterYear();
   initMobileMenu();
   initScrollSpy();
@@ -826,17 +862,14 @@
     setOpen(!isOpen);
   });
 
-  // dışarı tıkla kapat
   document.addEventListener("click", (e) => {
     if (fab.dataset.open !== "true") return;
     if (!fab.contains(e.target)) setOpen(false);
   });
 
-  // ESC kapat
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") setOpen(false);
   });
 
-  // seçim yapınca kapat
   items.forEach((a) => a.addEventListener("click", () => setOpen(false)));
 })();
