@@ -7,6 +7,53 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+  // Perf helpers
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+  const throttle = (fn, wait = 120) => {
+    let last = 0;
+    let t = 0;
+    let lastArgs = null;
+
+    return (...args) => {
+      const now = performance.now();
+      const remaining = wait - (now - last);
+      lastArgs = args;
+
+      if (remaining <= 0) {
+        if (t) {
+          clearTimeout(t);
+          t = 0;
+        }
+        last = now;
+        fn(...lastArgs);
+        lastArgs = null;
+        return;
+      }
+
+      if (!t) {
+        t = window.setTimeout(() => {
+          t = 0;
+          last = performance.now();
+          if (lastArgs) fn(...lastArgs);
+          lastArgs = null;
+        }, remaining);
+      }
+    };
+  };
+
+  const restartAnimClass = (el, cls) => {
+    if (!el) return;
+    // Desktop'ta reflow ile garanti restart, mobilde reflow yok
+    el.classList.remove(cls);
+    if (isMobile) {
+      requestAnimationFrame(() => el.classList.add(cls));
+    } else {
+      void el.offsetWidth; // reflow
+      el.classList.add(cls);
+    }
+  };
+
   /* =========================================================
      1) Footer Year
   ========================================================= */
@@ -14,276 +61,285 @@
     const yearEl = $("#year");
     if (yearEl) yearEl.textContent = String(new Date().getFullYear());
   };
-  
 
   /* =========================================================
-     2) Mobile Menu (tek, stabil)
+     2) Mobile Menu (tek, stabil + mobil performans fix)
   ========================================================= */
- const initMobileMenu = () => {
-  // Tek sefer kur
-  if (window.__MOBILE_MENU_HARD_FIX__) return;
-  window.__MOBILE_MENU_HARD_FIX__ = true;
+  const initMobileMenu = () => {
+    // Tek sefer kur
+    if (window.__MOBILE_MENU_HARD_FIX__) return;
+    window.__MOBILE_MENU_HARD_FIX__ = true;
 
-  const burger = $("#burger");
-  const baseMenu = $("#menu");
-  if (!burger) return;
+    const burger = $("#burger");
+    const baseMenu = $("#menu");
+    if (!burger) return;
 
-  const MOBILE_MAX = 920;
-  let closeTimer = 0;
+    const MOBILE_MAX = 920;
+    let closeTimer = 0;
 
-  const setImp = (el, prop, val) => {
-    if (!el) return;
-    el.style.setProperty(prop, val, "important");
-  };
+    const setImp = (el, prop, val) => {
+      if (!el) return;
+      el.style.setProperty(prop, val, "important");
+    };
 
-  const clearBodyLocks = () => {
-    document.body.classList.remove("menu-open", "mobile-fix-open");
-    document.body.style.removeProperty("position");
-    document.body.style.removeProperty("top");
-    document.body.style.removeProperty("left");
-    document.body.style.removeProperty("right");
-    document.body.style.removeProperty("width");
-    document.body.style.removeProperty("overflow");
-    document.body.style.removeProperty("touch-action");
-  };
+    const clearBodyLocks = () => {
+      document.body.classList.remove("menu-open", "mobile-fix-open");
+      document.body.style.removeProperty("position");
+      document.body.style.removeProperty("top");
+      document.body.style.removeProperty("left");
+      document.body.style.removeProperty("right");
+      document.body.style.removeProperty("width");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("touch-action");
+    };
 
-  clearBodyLocks();
+    clearBodyLocks();
 
-  // Backdrop
-  let backdrop = $("#mobileFixBackdrop");
-  if (!backdrop) {
-    backdrop = document.createElement("div");
-    backdrop.id = "mobileFixBackdrop";
-    document.body.appendChild(backdrop);
-  }
-
-  // Drawer
-  let drawer = $("#mobileFixDrawer");
-  if (!drawer) {
-    drawer = document.createElement("aside");
-    drawer.id = "mobileFixDrawer";
-    drawer.setAttribute("aria-hidden", "true");
-    drawer.innerHTML = `
-      <p class="mfix-head">MENÜ</p>
-      <nav class="mfix-links" aria-label="Mobil menü"></nav>
-    `;
-    document.body.appendChild(drawer);
-  }
-
-  let linksWrap = $(".mfix-links", drawer);
-  if (!linksWrap) {
-    linksWrap = document.createElement("nav");
-    linksWrap.className = "mfix-links";
-    linksWrap.setAttribute("aria-label", "Mobil menü");
-    drawer.appendChild(linksWrap);
-  }
-
-  const fallbackLinks = [
-    { href: "#hizmetler", text: "Hizmetler" },
-    { href: "#hakkimizda", text: "Hakkımızda" },
-    { href: "#yorumlar", text: "Yorumlar" },
-    { href: "#iletisim", text: "İletişim" },
-    { href: "#iletisim", text: "Randevu" }
-  ];
-
-  const styleBase = () => {
     // Backdrop
-    setImp(backdrop, "position", "fixed");
-    setImp(backdrop, "inset", "0");
-    setImp(backdrop, "background", "rgba(0,0,0,.38)");
-    setImp(backdrop, "backdrop-filter", "blur(2px)");
-    setImp(backdrop, "-webkit-backdrop-filter", "blur(2px)");
-    setImp(backdrop, "z-index", "99990");
-    setImp(backdrop, "opacity", "0");
-    setImp(backdrop, "pointer-events", "none");
-    setImp(backdrop, "display", "none");
-    setImp(backdrop, "transition", "opacity .22s ease");
+    let backdrop = $("#mobileFixBackdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.id = "mobileFixBackdrop";
+      document.body.appendChild(backdrop);
+    }
 
     // Drawer
-    setImp(drawer, "position", "fixed");
-    setImp(drawer, "top", "0");
-    setImp(drawer, "right", "0");
-    setImp(drawer, "bottom", "0");
-    setImp(drawer, "left", "auto");
-    setImp(drawer, "width", "min(86vw, 340px)");
-    setImp(drawer, "max-width", "340px");
-    setImp(drawer, "max-height", "100dvh");
-    setImp(drawer, "overflow-y", "auto");
-    setImp(drawer, "overflow-x", "hidden");
-    setImp(drawer, "padding", "84px 14px 16px");
-    setImp(drawer, "background", "linear-gradient(160deg, rgba(20,20,24,.98), rgba(12,12,15,.95))");
-    setImp(drawer, "border-left", "1px solid rgba(232,203,132,.35)");
-    setImp(drawer, "border-radius", "18px 0 0 18px");
-    setImp(drawer, "box-shadow", "-18px 0 46px rgba(0,0,0,.46)");
-    setImp(drawer, "z-index", "99991");
-    setImp(drawer, "display", "block");
-    setImp(drawer, "opacity", "0");
-    setImp(drawer, "pointer-events", "none");
-    setImp(drawer, "transform", "translate3d(100%,0,0)");
-    setImp(drawer, "transition", "transform .26s ease, opacity .2s ease");
-    setImp(drawer, "touch-action", "pan-y");
-    setImp(drawer, "overscroll-behavior", "contain");
-
-    setImp(burger, "position", "relative");
-    setImp(burger, "z-index", "99992");
-  };
-
-  const syncBaseMenuVisibility = () => {
-    if (!baseMenu) return;
-    if (window.innerWidth <= MOBILE_MAX) {
-      setImp(baseMenu, "display", "none");
-      setImp(baseMenu, "visibility", "hidden");
-      setImp(baseMenu, "pointer-events", "none");
-      baseMenu.setAttribute("aria-hidden", "true");
-    } else {
-      baseMenu.style.removeProperty("display");
-      baseMenu.style.removeProperty("visibility");
-      baseMenu.style.removeProperty("pointer-events");
-      baseMenu.setAttribute("aria-hidden", "false");
+    let drawer = $("#mobileFixDrawer");
+    if (!drawer) {
+      drawer = document.createElement("aside");
+      drawer.id = "mobileFixDrawer";
+      drawer.setAttribute("aria-hidden", "true");
+      drawer.innerHTML = `
+        <p class="mfix-head">MENÜ</p>
+        <nav class="mfix-links" aria-label="Mobil menü"></nav>
+      `;
+      document.body.appendChild(drawer);
     }
-  };
 
-  const buildLinks = () => {
-  const src = baseMenu ? $$("a[href]", baseMenu) : [];
-  const items = src.length
-    ? src.map((a) => ({
-        href: a.getAttribute("href") || "#",
-        text: (a.textContent || "").trim() || "Link",
-        target: a.getAttribute("target") || "",
-        rel: a.getAttribute("rel") || ""
-      }))
-    : fallbackLinks;
+    let linksWrap = $(".mfix-links", drawer);
+    if (!linksWrap) {
+      linksWrap = document.createElement("nav");
+      linksWrap.className = "mfix-links";
+      linksWrap.setAttribute("aria-label", "Mobil menü");
+      drawer.appendChild(linksWrap);
+    }
 
-  linksWrap.innerHTML = "";
+    const fallbackLinks = [
+      { href: "#hizmetler", text: "Hizmetler" },
+      { href: "#hakkimizda", text: "Hakkımızda" },
+      { href: "#yorumlar", text: "Yorumlar" },
+      { href: "#iletisim", text: "İletişim" },
+      { href: "#iletisim", text: "Randevu" }
+    ];
 
-  items.forEach((it) => {
-    const a = document.createElement("a");
-    a.href = it.href;
-    a.textContent = it.text; // SADECE YAZI, ok JS ile eklenmiyor
-    if (it.target) a.target = it.target;
-    if (it.rel) a.rel = it.rel;
+    const styleBase = () => {
+      // Backdrop
+      setImp(backdrop, "position", "fixed");
+      setImp(backdrop, "inset", "0");
+      setImp(backdrop, "background", "rgba(0,0,0,.38)");
 
-    // Kart görünümü
-    a.style.display = "flex";
-    a.style.alignItems = "center";
-    a.style.justifyContent = "space-between";
-    a.style.minHeight = "50px";
-    a.style.padding = "0 14px";
-    a.style.marginTop = "10px";
-    a.style.borderRadius = "12px";
-    a.style.border = "1px solid rgba(255,255,255,.14)";
-    a.style.background = "linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03))";
-    a.style.color = "#f8f8fb";
-    a.style.textDecoration = "none";
-    a.style.fontSize = "15px";
-    a.style.fontWeight = "700";
-    a.style.position = "relative"; // CSS oku için
+      // Mobil performans: blur pahalı, mobilde kapat
+      if (window.innerWidth <= MOBILE_MAX) {
+        setImp(backdrop, "backdrop-filter", "none");
+        setImp(backdrop, "-webkit-backdrop-filter", "none");
+      } else {
+        setImp(backdrop, "backdrop-filter", "blur(2px)");
+        setImp(backdrop, "-webkit-backdrop-filter", "blur(2px)");
+      }
 
-    linksWrap.appendChild(a);
-  });
+      setImp(backdrop, "z-index", "99990");
+      setImp(backdrop, "opacity", "0");
+      setImp(backdrop, "pointer-events", "none");
+      setImp(backdrop, "display", "none");
+      setImp(backdrop, "transition", "opacity .22s ease");
 
-  // Eski sürümden kalmış JS oklarını temizle (varsa)
-  linksWrap.querySelectorAll(".mfix-arr").forEach((el) => el.remove());
-};
+      // Drawer
+      setImp(drawer, "position", "fixed");
+      setImp(drawer, "top", "0");
+      setImp(drawer, "right", "0");
+      setImp(drawer, "bottom", "0");
+      setImp(drawer, "left", "auto");
+      setImp(drawer, "width", "min(86vw, 340px)");
+      setImp(drawer, "max-width", "340px");
+      setImp(drawer, "max-height", "100dvh");
+      setImp(drawer, "overflow-y", "auto");
+      setImp(drawer, "overflow-x", "hidden");
+      setImp(drawer, "padding", "84px 14px 16px");
+      setImp(drawer, "background", "linear-gradient(160deg, rgba(20,20,24,.98), rgba(12,12,15,.95))");
+      setImp(drawer, "border-left", "1px solid rgba(232,203,132,.35)");
+      setImp(drawer, "border-radius", "18px 0 0 18px");
+      setImp(drawer, "box-shadow", "-18px 0 46px rgba(0,0,0,.46)");
+      setImp(drawer, "z-index", "99991");
+      setImp(drawer, "display", "block");
+      setImp(drawer, "opacity", "0");
+      setImp(drawer, "pointer-events", "none");
+      setImp(drawer, "transform", "translate3d(100%,0,0)");
+      setImp(drawer, "transition", "transform .26s ease, opacity .2s ease");
+      setImp(drawer, "touch-action", "pan-y");
+      setImp(drawer, "overscroll-behavior", "contain");
 
-  const isOpen = () => drawer.classList.contains("is-open");
+      setImp(burger, "position", "relative");
+      setImp(burger, "z-index", "99992");
+    };
 
-  const openMenu = () => {
-    if (window.innerWidth > MOBILE_MAX) return;
-    if (isOpen()) return;
+    const syncBaseMenuVisibility = () => {
+      if (!baseMenu) return;
+      if (window.innerWidth <= MOBILE_MAX) {
+        setImp(baseMenu, "display", "none");
+        setImp(baseMenu, "visibility", "hidden");
+        setImp(baseMenu, "pointer-events", "none");
+        baseMenu.setAttribute("aria-hidden", "true");
+      } else {
+        baseMenu.style.removeProperty("display");
+        baseMenu.style.removeProperty("visibility");
+        baseMenu.style.removeProperty("pointer-events");
+        baseMenu.setAttribute("aria-hidden", "false");
+      }
+    };
 
-    clearTimeout(closeTimer);
+    const buildLinks = () => {
+      const src = baseMenu ? $$("a[href]", baseMenu) : [];
+      const items = src.length
+        ? src.map((a) => ({
+            href: a.getAttribute("href") || "#",
+            text: (a.textContent || "").trim() || "Link",
+            target: a.getAttribute("target") || "",
+            rel: a.getAttribute("rel") || ""
+          }))
+        : fallbackLinks;
+
+      linksWrap.innerHTML = "";
+
+      items.forEach((it) => {
+        const a = document.createElement("a");
+        a.href = it.href;
+        a.textContent = it.text;
+        if (it.target) a.target = it.target;
+        if (it.rel) a.rel = it.rel;
+
+        // Kart görünümü
+        a.style.display = "flex";
+        a.style.alignItems = "center";
+        a.style.justifyContent = "space-between";
+        a.style.minHeight = "50px";
+        a.style.padding = "0 14px";
+        a.style.marginTop = "10px";
+        a.style.borderRadius = "12px";
+        a.style.border = "1px solid rgba(255,255,255,.14)";
+        a.style.background = "linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03))";
+        a.style.color = "#f8f8fb";
+        a.style.textDecoration = "none";
+        a.style.fontSize = "15px";
+        a.style.fontWeight = "700";
+        a.style.position = "relative";
+
+        linksWrap.appendChild(a);
+      });
+
+      linksWrap.querySelectorAll(".mfix-arr").forEach((el) => el.remove());
+    };
+
+    const isOpen = () => drawer.classList.contains("is-open");
+
+    const openMenu = () => {
+      if (window.innerWidth > MOBILE_MAX) return;
+      if (isOpen()) return;
+
+      clearTimeout(closeTimer);
+      styleBase();
+      syncBaseMenuVisibility();
+      buildLinks();
+
+      drawer.classList.add("is-open");
+      backdrop.classList.add("is-open");
+
+      setImp(backdrop, "display", "block");
+      setImp(backdrop, "opacity", "1");
+      setImp(backdrop, "pointer-events", "auto");
+
+      setImp(drawer, "opacity", "1");
+      setImp(drawer, "pointer-events", "auto");
+      setImp(drawer, "transform", "translate3d(0,0,0)");
+
+      document.body.classList.add("mobile-fix-open");
+      setImp(document.body, "overflow", "hidden");
+      setImp(document.body, "touch-action", "none");
+
+      burger.setAttribute("aria-expanded", "true");
+      drawer.setAttribute("aria-hidden", "false");
+    };
+
+    const closeMenu = (instant = false) => {
+      if (!isOpen() && !instant) return;
+
+      drawer.classList.remove("is-open");
+      backdrop.classList.remove("is-open");
+
+      setImp(drawer, "opacity", "0");
+      setImp(drawer, "pointer-events", "none");
+      setImp(drawer, "transform", "translate3d(100%,0,0)");
+
+      setImp(backdrop, "opacity", "0");
+      setImp(backdrop, "pointer-events", "none");
+
+      if (instant) {
+        setImp(backdrop, "display", "none");
+      } else {
+        clearTimeout(closeTimer);
+        closeTimer = window.setTimeout(() => {
+          setImp(backdrop, "display", "none");
+        }, 220);
+      }
+
+      document.body.classList.remove("mobile-fix-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("touch-action");
+
+      burger.setAttribute("aria-expanded", "false");
+      drawer.setAttribute("aria-hidden", "true");
+    };
+
+    // İlk kurulum
     styleBase();
     syncBaseMenuVisibility();
     buildLinks();
-
-    drawer.classList.add("is-open");
-    backdrop.classList.add("is-open");
-
-    setImp(backdrop, "display", "block");
-    setImp(backdrop, "opacity", "1");
-    setImp(backdrop, "pointer-events", "auto");
-
-    setImp(drawer, "opacity", "1");
-    setImp(drawer, "pointer-events", "auto");
-    setImp(drawer, "transform", "translate3d(0,0,0)");
-
-    document.body.classList.add("mobile-fix-open");
-    setImp(document.body, "overflow", "hidden");
-    setImp(document.body, "touch-action", "none");
-
-    burger.setAttribute("aria-expanded", "true");
-    drawer.setAttribute("aria-hidden", "false");
-  };
-
-  const closeMenu = (instant = false) => {
-    if (!isOpen() && !instant) return;
-
-    drawer.classList.remove("is-open");
-    backdrop.classList.remove("is-open");
-
-    setImp(drawer, "opacity", "0");
-    setImp(drawer, "pointer-events", "none");
-    setImp(drawer, "transform", "translate3d(100%,0,0)");
-
-    setImp(backdrop, "opacity", "0");
-    setImp(backdrop, "pointer-events", "none");
-
-    if (instant) {
-      setImp(backdrop, "display", "none");
-    } else {
-      clearTimeout(closeTimer);
-      closeTimer = window.setTimeout(() => {
-        setImp(backdrop, "display", "none");
-      }, 220);
-    }
-
-    document.body.classList.remove("mobile-fix-open");
-    document.body.style.removeProperty("overflow");
-    document.body.style.removeProperty("touch-action");
-
+    closeMenu(true);
     burger.setAttribute("aria-expanded", "false");
-    drawer.setAttribute("aria-hidden", "true");
+
+    burger.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (window.innerWidth > MOBILE_MAX) return;
+      if (isOpen()) closeMenu();
+      else openMenu();
+    });
+
+    backdrop.addEventListener("click", () => closeMenu());
+
+    drawer.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      const link = t.closest("a[href]");
+      if (link) closeMenu();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
+
+    // Resize: throttle
+    const onResize = throttle(() => {
+      syncBaseMenuVisibility();
+      // mobilde blur ayarı tekrar güncellensin
+      styleBase();
+      if (window.innerWidth > MOBILE_MAX) closeMenu(true);
+    }, 140);
+
+    window.addEventListener("resize", onResize, { passive: true });
   };
-
-  // İlk kurulum
-  styleBase();
-  syncBaseMenuVisibility();
-  buildLinks();
-  closeMenu(true);
-  burger.setAttribute("aria-expanded", "false");
-
-  burger.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.innerWidth > MOBILE_MAX) return;
-    if (isOpen()) closeMenu();
-    else openMenu();
-  });
-
-  backdrop.addEventListener("click", () => closeMenu());
-
-  drawer.addEventListener("click", (e) => {
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    const link = t.closest("a[href]");
-    if (link) closeMenu();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeMenu();
-  });
-
-  window.addEventListener("resize", () => {
-    syncBaseMenuVisibility();
-    if (window.innerWidth > MOBILE_MAX) closeMenu(true);
-  }, { passive: true });
-};
-
 
   /* =========================================================
      3) Scroll Spy
-     - Sayfa en üstteyken aktif link göstermesin (hepsi eşit görünsün)
   ========================================================= */
   const initScrollSpy = () => {
     const navLinks = $$('.nav .menu a[href^="#"], #menu a[href^="#"]').filter((a) => {
@@ -327,7 +383,6 @@
       const firstHref = hrefs[0];
       const firstSec = sectionMap.get(firstHref);
 
-      // En üstteyken hiçbir link aktif olmasın
       if (firstSec && window.scrollY < Math.max(0, firstSec.offsetTop - stickyOffset() - 8)) {
         setActive(null);
         raf = 0;
@@ -351,353 +406,360 @@
     };
 
     window.addEventListener("scroll", requestUpdate, { passive: true });
-    window.addEventListener("resize", requestUpdate);
+    window.addEventListener("resize", throttle(requestUpdate, 140), { passive: true });
     requestUpdate();
   };
 
   /* =========================================================
-     4) Hero Slider (stabil + geçiş + parlak sweep)
+     4) Hero Slider (stabil + mobil performans fix)
   ========================================================= */
-const initHeroSlider = () => {
-  const root = $("#heroGallery");
-  if (!root || root.dataset.sliderInit === "1") return;
-  root.dataset.sliderInit = "1";
+  const initHeroSlider = () => {
+    const root = $("#heroGallery");
+    if (!root || root.dataset.sliderInit === "1") return;
+    root.dataset.sliderInit = "1";
 
-  const viewport = $(".mediaViewport", root);
-  const slides = $$(".mediaViewport .mediaSlide", root);
-  if (!viewport || slides.length < 2) return;
+    const viewport = $(".mediaViewport", root);
+    const slides = $$(".mediaViewport .mediaSlide", root);
+    if (!viewport || slides.length < 2) return;
 
-  const prevBtn = $(".mediaNav--prev", root);
-  const nextBtn = $(".mediaNav--next", root);
-  const captionEl = $("#heroCaption", root);
-  const countEl = $("#heroCount", root);
-  const progressEl =
-    $("#heroProgress", root) ||
-    $(".heroProgressFill", root) ||
-    $(".mediaProgress > span", root);
+    const prevBtn = $(".mediaNav--prev", root);
+    const nextBtn = $(".mediaNav--next", root);
+    const captionEl = $("#heroCaption", root);
+    const countEl = $("#heroCount", root);
+    const progressEl =
+      $("#heroProgress", root) ||
+      $(".heroProgressFill", root) ||
+      $(".mediaProgress > span", root);
 
-  let dotsWrap = $("#heroDots", root) || $(".mediaDots", root);
-  if (!dotsWrap) {
-    dotsWrap = document.createElement("div");
-    dotsWrap.className = "mediaDots";
-    const overlay = $(".mediaOverlay", root) || root;
-    overlay.appendChild(dotsWrap);
-  }
-
-  const AUTO_MS = 5200;
-  const LOCK_MS = 620;
-  const SWIPE_MIN = 45;
-  const FORCE_ANIMATION = true; // PC'de reduce-motion açık olsa bile efekt zorla çalışsın
-  const reduceMotionQ = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const animOn = () => FORCE_ANIMATION || !reduceMotionQ.matches;
-
-  let index = slides.findIndex(
-    (s) =>
-      s.classList.contains("is-active") ||
-      s.classList.contains("active") ||
-      s.getAttribute("aria-hidden") === "false"
-  );
-  if (index < 0) index = 0;
-
-  let timer = 0;
-  let raf = 0;
-  let paused = false;
-  let pausedElapsed = 0;
-  let startedAt = 0;
-  let locked = false;
-  const touch = { x: 0, y: 0 };
-
-  const setImp = (el, prop, val) => {
-    if (!el) return;
-    el.style.setProperty(prop, val, "important");
-  };
-
-  const setProgress = (ratio) => {
-    if (!progressEl) return;
-    const r = Math.max(0, Math.min(1, ratio));
-    progressEl.style.width = `${r * 100}%`;
-  };
-
-  const clearLoops = () => {
-    if (timer) {
-      clearTimeout(timer);
-      timer = 0;
+    let dotsWrap = $("#heroDots", root) || $(".mediaDots", root);
+    if (!dotsWrap) {
+      dotsWrap = document.createElement("div");
+      dotsWrap.className = "mediaDots";
+      const overlay = $(".mediaOverlay", root) || root;
+      overlay.appendChild(dotsWrap);
     }
-    if (raf) {
-      cancelAnimationFrame(raf);
-      raf = 0;
-    }
-  };
 
-  const getElapsedFromProgress = () => {
-    if (!progressEl) return 0;
-    const width = parseFloat(progressEl.style.width || "0");
-    const pct = Number.isFinite(width) ? Math.max(0, Math.min(100, width)) : 0;
-    return (pct / 100) * AUTO_MS;
-  };
+    // Mobilde biraz daha yavaş değişsin (CPU rahatlar)
+    const AUTO_MS = isMobile ? 6500 : 5200;
+    const LOCK_MS = 620;
+    const SWIPE_MIN = 45;
 
-  const applySlideBase = (slide) => {
-    setImp(slide, "position", "absolute");
-    setImp(slide, "inset", "0");
-    setImp(slide, "width", "100%");
-    setImp(slide, "height", "100%");
-    setImp(slide, "object-fit", "cover");
-    setImp(slide, "object-position", "center center");
-    setImp(slide, "backface-visibility", "hidden");
-    setImp(slide, "will-change", "opacity, transform, filter");
-    setImp(
-      slide,
-      "transition",
-      "opacity .85s cubic-bezier(.22,.61,.36,1), transform 1.15s cubic-bezier(.22,.61,.36,1), filter .9s ease"
+    const FORCE_ANIMATION = true; // PC'de reduce-motion açık olsa bile efekt zorla çalışsın
+    const reduceMotionQ = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // Mobilde animasyonlar açık kalsa da "sweep reflow" kapalı olacak
+    const animOn = () => FORCE_ANIMATION || !reduceMotionQ.matches;
+
+    let index = slides.findIndex(
+      (s) =>
+        s.classList.contains("is-active") ||
+        s.classList.contains("active") ||
+        s.getAttribute("aria-hidden") === "false"
     );
-  };
+    if (index < 0) index = 0;
 
-  const setSlideActive = (slide, active) => {
-    if (active) {
-      setImp(slide, "opacity", "1");
-      setImp(slide, "transform", "translateZ(0) scale(1)");
-      setImp(slide, "filter", "saturate(1.07) contrast(1.05)");
-      setImp(slide, "z-index", "2");
-      slide.classList.add("is-active", "active");
-      slide.setAttribute("aria-hidden", "false");
-    } else {
-      setImp(slide, "opacity", "0");
-      setImp(slide, "transform", "translateZ(0) scale(1.045)");
-      setImp(slide, "filter", "saturate(1.02) contrast(1.01)");
-      setImp(slide, "z-index", "1");
-      slide.classList.remove("is-active", "active");
-      slide.setAttribute("aria-hidden", "true");
-    }
-  };
+    let timer = 0;
+    let raf = 0;
+    let paused = false;
+    let pausedElapsed = 0;
+    let startedAt = 0;
+    let locked = false;
+    const touch = { x: 0, y: 0 };
 
-  slides.forEach((slide, i) => {
-    applySlideBase(slide);
-    setSlideActive(slide, i === index);
-  });
-
-  const pulseSweep = () => {
-    viewport.classList.remove("is-sweeping");
-    void viewport.offsetWidth; // reflow
-    viewport.classList.add("is-sweeping");
-  };
-
-  const preloadAround = (i) => {
-    [i, i + 1, i - 1].forEach((n) => {
-      const s = slides[(n + slides.length) % slides.length];
-      if (!s) return;
-      const src = s.getAttribute("src");
-      if (!src) return;
-      const img = new Image();
-      img.decoding = "async";
-      img.src = src;
-    });
-  };
-
-  let dots = [];
-
-  const updateTextAndDots = () => {
-    const activeSlide = slides[index];
-    const caption =
-      activeSlide.getAttribute("data-caption") || `Salon Görseli ${index + 1}`;
-
-    if (captionEl) {
-      captionEl.textContent = caption;
-      captionEl.classList.remove("cap-in");
-      void captionEl.offsetWidth;
-      captionEl.classList.add("cap-in");
-    }
-
-    if (countEl) {
-      countEl.textContent = `${index + 1}/${slides.length}`;
-      countEl.classList.remove("cap-in");
-      void countEl.offsetWidth;
-      countEl.classList.add("cap-in");
-    }
-
-    dots.forEach((dot, i) => {
-      const active = i === index;
-      dot.classList.toggle("is-active", active);
-      dot.setAttribute("aria-current", active ? "true" : "false");
-    });
-  };
-
-  const animateProgress = (baseElapsed = 0) => {
-    if (!animOn() || paused) {
-      setProgress(1);
-      return;
-    }
-    startedAt = performance.now();
-
-    const tick = (ts) => {
-      if (paused) return;
-      const elapsed = baseElapsed + (ts - startedAt);
-      setProgress(elapsed / AUTO_MS);
-      if (elapsed < AUTO_MS) raf = requestAnimationFrame(tick);
+    const setImp = (el, prop, val) => {
+      if (!el) return;
+      el.style.setProperty(prop, val, "important");
     };
 
-    raf = requestAnimationFrame(tick);
-  };
+    const setProgress = (ratio) => {
+      if (!progressEl) return;
+      const r = Math.max(0, Math.min(1, ratio));
+      progressEl.style.width = `${r * 100}%`;
+    };
 
-  const scheduleNext = (delayMs, baseElapsed = 0) => {
-    clearLoops();
-    if (!animOn() || paused) {
-      setProgress(1);
-      return;
+    const clearLoops = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = 0;
+      }
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    const getElapsedFromProgress = () => {
+      if (!progressEl) return 0;
+      const width = parseFloat(progressEl.style.width || "0");
+      const pct = Number.isFinite(width) ? Math.max(0, Math.min(100, width)) : 0;
+      return (pct / 100) * AUTO_MS;
+    };
+
+    const applySlideBase = (slide) => {
+      setImp(slide, "position", "absolute");
+      setImp(slide, "inset", "0");
+      setImp(slide, "width", "100%");
+      setImp(slide, "height", "100%");
+      setImp(slide, "object-fit", "cover");
+      setImp(slide, "object-position", "center center");
+      setImp(slide, "backface-visibility", "hidden");
+      setImp(slide, "will-change", "opacity, transform, filter");
+      setImp(
+        slide,
+        "transition",
+        "opacity .85s cubic-bezier(.22,.61,.36,1), transform 1.15s cubic-bezier(.22,.61,.36,1), filter .9s ease"
+      );
+    };
+
+    const setSlideActive = (slide, active) => {
+      if (active) {
+        setImp(slide, "opacity", "1");
+        setImp(slide, "transform", "translateZ(0) scale(1)");
+        setImp(slide, "filter", "saturate(1.07) contrast(1.05)");
+        setImp(slide, "z-index", "2");
+        slide.classList.add("is-active", "active");
+        slide.setAttribute("aria-hidden", "false");
+      } else {
+        setImp(slide, "opacity", "0");
+        setImp(slide, "transform", "translateZ(0) scale(1.045)");
+        setImp(slide, "filter", "saturate(1.02) contrast(1.01)");
+        setImp(slide, "z-index", "1");
+        slide.classList.remove("is-active", "active");
+        slide.setAttribute("aria-hidden", "true");
+      }
+    };
+
+    slides.forEach((slide, i) => {
+      applySlideBase(slide);
+      setSlideActive(slide, i === index);
+    });
+
+    const pulseSweep = () => {
+      // Mobilde reflow pahalı: sweep animasyonunu kapat
+      if (isMobile) return;
+      viewport.classList.remove("is-sweeping");
+      void viewport.offsetWidth; // reflow
+      viewport.classList.add("is-sweeping");
+    };
+
+    // Preload cache (aynı src tekrar tekrar yüklenmesin)
+    const preloadCache = new Set();
+    const preloadSrc = (src) => {
+      if (!src || preloadCache.has(src)) return;
+      preloadCache.add(src);
+      const img = new Image();
+      img.decoding = "async";
+      img.loading = "eager";
+      img.src = src;
+    };
+
+    const preloadAround = (i) => {
+      [i, i + 1, i - 1].forEach((n) => {
+        const s = slides[(n + slides.length) % slides.length];
+        if (!s) return;
+        const src = s.getAttribute("src");
+        preloadSrc(src);
+      });
+    };
+
+    let dots = [];
+
+    const updateTextAndDots = () => {
+      const activeSlide = slides[index];
+      const caption = activeSlide.getAttribute("data-caption") || `Salon Görseli ${index + 1}`;
+
+      if (captionEl) {
+        captionEl.textContent = caption;
+        restartAnimClass(captionEl, "cap-in");
+      }
+
+      if (countEl) {
+        countEl.textContent = `${index + 1}/${slides.length}`;
+        restartAnimClass(countEl, "cap-in");
+      }
+
+      dots.forEach((dot, i) => {
+        const active = i === index;
+        dot.classList.toggle("is-active", active);
+        dot.setAttribute("aria-current", active ? "true" : "false");
+      });
+    };
+
+    const animateProgress = (baseElapsed = 0) => {
+      if (!animOn() || paused) {
+        setProgress(1);
+        return;
+      }
+      startedAt = performance.now();
+
+      const tick = (ts) => {
+        if (paused) return;
+        const elapsed = baseElapsed + (ts - startedAt);
+        setProgress(elapsed / AUTO_MS);
+        if (elapsed < AUTO_MS) raf = requestAnimationFrame(tick);
+      };
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    const scheduleNext = (delayMs, baseElapsed = 0) => {
+      clearLoops();
+      if (!animOn() || paused) {
+        setProgress(1);
+        return;
+      }
+      animateProgress(baseElapsed);
+      timer = window.setTimeout(() => goTo(index + 1), delayMs);
+    };
+
+    const pauseAuto = () => {
+      if (paused) return;
+      paused = true;
+      root.classList.add("is-paused");
+      pausedElapsed = getElapsedFromProgress();
+      clearLoops();
+    };
+
+    const resumeAuto = () => {
+      if (!paused) return;
+      paused = false;
+      root.classList.remove("is-paused");
+
+      if (!animOn()) {
+        setProgress(1);
+        return;
+      }
+
+      const remaining = Math.max(150, AUTO_MS - pausedElapsed);
+      scheduleNext(remaining, pausedElapsed);
+      pausedElapsed = 0;
+    };
+
+    const goTo = (newIndex) => {
+      if (locked) return;
+      const target = (newIndex + slides.length) % slides.length;
+
+      if (target === index) {
+        if (!paused) scheduleNext(AUTO_MS, 0);
+        return;
+      }
+
+      locked = true;
+
+      const prevSlide = slides[index];
+      const nextSlide = slides[target];
+
+      setSlideActive(prevSlide, false);
+      setSlideActive(nextSlide, true);
+      index = target;
+
+      updateTextAndDots();
+      preloadAround(index);
+
+      if (animOn()) pulseSweep();
+
+      if (!paused) {
+        setProgress(0);
+        scheduleNext(AUTO_MS, 0);
+      }
+
+      window.setTimeout(() => {
+        locked = false;
+      }, LOCK_MS);
+    };
+
+    const next = () => goTo(index + 1);
+    const prev = () => goTo(index - 1);
+
+    dotsWrap.innerHTML = "";
+    dots = slides.map((_, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "mediaDot";
+      b.setAttribute("aria-label", `${i + 1}. fotoğraf`);
+      b.addEventListener("click", () => goTo(i));
+      dotsWrap.appendChild(b);
+      return b;
+    });
+
+    prevBtn?.addEventListener("click", prev);
+    nextBtn?.addEventListener("click", next);
+
+    root.addEventListener("mouseenter", pauseAuto);
+    root.addEventListener("mouseleave", resumeAuto);
+    root.addEventListener("focusin", pauseAuto);
+    root.addEventListener("focusout", (e) => {
+      const related = e.relatedTarget;
+      if (!(related instanceof Node) || !root.contains(related)) resumeAuto();
+    });
+
+    root.addEventListener(
+      "touchstart",
+      (e) => {
+        const t = e.changedTouches[0];
+        touch.x = t.clientX;
+        touch.y = t.clientY;
+        pauseAuto();
+      },
+      { passive: true }
+    );
+
+    root.addEventListener(
+      "touchend",
+      (e) => {
+        const t = e.changedTouches[0];
+        const dx = t.clientX - touch.x;
+        const dy = t.clientY - touch.y;
+
+        if (Math.abs(dx) > SWIPE_MIN && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0) next();
+          else prev();
+        }
+        resumeAuto();
+      },
+      { passive: true }
+    );
+
+    root.setAttribute("tabindex", "0");
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        next();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        prev();
+      } else if (e.key === " " || e.code === "Space") {
+        e.preventDefault();
+        if (paused) resumeAuto();
+        else pauseAuto();
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) pauseAuto();
+      else resumeAuto();
+    });
+
+    if (typeof reduceMotionQ.addEventListener === "function") {
+      reduceMotionQ.addEventListener("change", () => {
+        if (!paused) scheduleNext(AUTO_MS, 0);
+      });
+    } else if (typeof reduceMotionQ.addListener === "function") {
+      reduceMotionQ.addListener(() => {
+        if (!paused) scheduleNext(AUTO_MS, 0);
+      });
     }
-    animateProgress(baseElapsed);
-    timer = window.setTimeout(() => goTo(index + 1), delayMs);
-  };
-
-  const pauseAuto = () => {
-    if (paused) return;
-    paused = true;
-    root.classList.add("is-paused");
-    pausedElapsed = getElapsedFromProgress();
-    clearLoops();
-  };
-
-  const resumeAuto = () => {
-    if (!paused) return;
-    paused = false;
-    root.classList.remove("is-paused");
-
-    if (!animOn()) {
-      setProgress(1);
-      return;
-    }
-
-    const remaining = Math.max(150, AUTO_MS - pausedElapsed);
-    scheduleNext(remaining, pausedElapsed);
-    pausedElapsed = 0;
-  };
-
-  const goTo = (newIndex) => {
-    if (locked) return;
-    const target = (newIndex + slides.length) % slides.length;
-
-    if (target === index) {
-      if (!paused) scheduleNext(AUTO_MS, 0);
-      return;
-    }
-
-    locked = true;
-
-    const prevSlide = slides[index];
-    const nextSlide = slides[target];
-
-    setSlideActive(prevSlide, false);
-    setSlideActive(nextSlide, true);
-    index = target;
 
     updateTextAndDots();
     preloadAround(index);
 
-    if (animOn()) pulseSweep();
-
-    if (!paused) {
+    if (animOn()) {
       setProgress(0);
       scheduleNext(AUTO_MS, 0);
+      pulseSweep();
+    } else {
+      setProgress(1);
     }
-
-    window.setTimeout(() => {
-      locked = false;
-    }, LOCK_MS);
   };
-
-  const next = () => goTo(index + 1);
-  const prev = () => goTo(index - 1);
-
-  dotsWrap.innerHTML = "";
-  dots = slides.map((_, i) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "mediaDot";
-    b.setAttribute("aria-label", `${i + 1}. fotoğraf`);
-    b.addEventListener("click", () => goTo(i));
-    dotsWrap.appendChild(b);
-    return b;
-  });
-
-  prevBtn?.addEventListener("click", prev);
-  nextBtn?.addEventListener("click", next);
-
-  root.addEventListener("mouseenter", pauseAuto);
-  root.addEventListener("mouseleave", resumeAuto);
-  root.addEventListener("focusin", pauseAuto);
-  root.addEventListener("focusout", (e) => {
-    const related = e.relatedTarget;
-    if (!(related instanceof Node) || !root.contains(related)) resumeAuto();
-  });
-
-  root.addEventListener(
-    "touchstart",
-    (e) => {
-      const t = e.changedTouches[0];
-      touch.x = t.clientX;
-      touch.y = t.clientY;
-      pauseAuto();
-    },
-    { passive: true }
-  );
-
-  root.addEventListener(
-    "touchend",
-    (e) => {
-      const t = e.changedTouches[0];
-      const dx = t.clientX - touch.x;
-      const dy = t.clientY - touch.y;
-
-      if (Math.abs(dx) > SWIPE_MIN && Math.abs(dx) > Math.abs(dy)) {
-        if (dx < 0) next();
-        else prev();
-      }
-      resumeAuto();
-    },
-    { passive: true }
-  );
-
-  root.setAttribute("tabindex", "0");
-  root.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") {
-      e.preventDefault();
-      next();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      prev();
-    } else if (e.key === " " || e.code === "Space") {
-      e.preventDefault();
-      if (paused) resumeAuto();
-      else pauseAuto();
-    }
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) pauseAuto();
-    else resumeAuto();
-  });
-
-  if (typeof reduceMotionQ.addEventListener === "function") {
-    reduceMotionQ.addEventListener("change", () => {
-      if (!paused) scheduleNext(AUTO_MS, 0);
-    });
-  } else if (typeof reduceMotionQ.addListener === "function") {
-    reduceMotionQ.addListener(() => {
-      if (!paused) scheduleNext(AUTO_MS, 0);
-    });
-  }
-
-  updateTextAndDots();
-  preloadAround(index);
-
-  if (animOn()) {
-    setProgress(0);
-    scheduleNext(AUTO_MS, 0);
-    pulseSweep();
-  } else {
-    setProgress(1);
-  }
-};
-
 
   /* =========================================================
      5) Review Reveal
@@ -740,8 +802,9 @@ const initHeroSlider = () => {
   initHeroSlider();
   initReviewReveal();
 })();
+
 // Floating Social FAB (WhatsApp + Instagram)
-(function initFab(){
+(function initFab() {
   const fab = document.querySelector("[data-fab]");
   if (!fab) return;
 
